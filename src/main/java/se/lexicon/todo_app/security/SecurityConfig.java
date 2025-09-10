@@ -54,7 +54,8 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 // Configure URL-based security rules
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()           // Allow public access to auth endpoints
+                        .requestMatchers("/api/auth/**").permitAll() //Allow public access to auth endpoints
+                        .requestMatchers("/api/person/register").permitAll()   // <--- Add this line
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll() // Allow access to API documentation
                         .anyRequest().authenticated()                          // Require authentication for all other requests
                 )
