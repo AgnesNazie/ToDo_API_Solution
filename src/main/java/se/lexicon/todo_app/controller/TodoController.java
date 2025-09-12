@@ -19,11 +19,14 @@ import org.springframework.web.multipart.MultipartFile;
 import se.lexicon.todo_app.dto.AttachmentDto;
 import se.lexicon.todo_app.dto.TodoDto;
 import se.lexicon.todo_app.service.TodoService;
+import se.lexicon.todo_app.service.UserService;
 
 import java.io.IOException;
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/todo")
@@ -33,9 +36,11 @@ import java.util.List;
 public class TodoController {
 
     private final TodoService todoService;
+    private final UserService userService;
 
-    public TodoController(TodoService todoService) {
+    public TodoController(TodoService todoService, UserService userService) {
         this.todoService = todoService;
+        this.userService = userService;
     }
 
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
@@ -68,12 +73,24 @@ public class TodoController {
             consumes = {MediaType.MULTIPART_FORM_DATA_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE}
     )
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @ResponseStatus(HttpStatus.CREATED)
     public TodoDto createTodo(
             @Parameter(description = "Todo details")
             @RequestPart("todo") @Valid TodoDto todoDto,
             @Parameter(description = "File attachments (max 5 files, 2MB each)")
-            @RequestPart(value = "files", required = false) MultipartFile[] files) {
+            @RequestPart(value = "files", required = false) MultipartFile[] files,
+            Principal principal // NEW
+
+    ) {
+        // Set personId from authenticated user
+        var currentUser = userService.findByUsername(principal.getName());
+        if (currentUser.getPerson() != null) {
+            todoDto = todoDto.withPersonId(currentUser.getPerson().getId());
+        } else {
+            throw new IllegalStateException("Current user has no associated person");
+        }
+
         validateFiles(files);
         List<AttachmentDto> attachments = convertFilesToAttachments(files);
         todoDto = todoDto.withAttachments(attachments);
@@ -100,15 +117,22 @@ public class TodoController {
             @Parameter(description = "Updated todo details")
             @RequestPart("todo") @Valid TodoDto todoDto,
             @Parameter(description = "File attachments (max 5 files, 2MB each)")
-            @RequestPart(value = "files", required = false) MultipartFile[] files) {
+            @RequestPart(value = "files", required = false) MultipartFile[] files,
+            Principal principal // NEW
+    ) {
 
+        // Set personId from authenticated user
+        var currentUser = userService.findByUsername(principal.getName());
+        if (currentUser.getPerson() != null) {
+            todoDto = todoDto.withPersonId(currentUser.getPerson().getId());
+        } else {
+            throw new IllegalStateException("Current user has no associated person");
+        }
         validateFiles(files);
         List<AttachmentDto> attachments = convertFilesToAttachments(files);
         todoDto = todoDto.withAttachments(attachments);
         return todoService.update(id, todoDto);
     }
-
-
 
 
     private void validateFiles(MultipartFile[] files) {

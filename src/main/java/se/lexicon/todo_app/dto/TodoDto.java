@@ -1,6 +1,7 @@
 package se.lexicon.todo_app.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Builder;
 
@@ -26,7 +27,7 @@ public record TodoDto(
 
         LocalDateTime dueDate,
 
-        Long personId,
+        Long  personId,
 
         int numberOfAttachments,
 
@@ -37,11 +38,21 @@ public record TodoDto(
         public TodoDto withAttachments(List<AttachmentDto> newAttachments) {
                 return new TodoDto(
                         id, title, description, completed,
-                        createdAt, updatedAt, dueDate, personId,
+                        createdAt, updatedAt, dueDate,personId,
                         newAttachments != null ? newAttachments.size() : 0,
                         newAttachments
                 );
         }
+
+        public TodoDto withPersonId(Long newPersonId) {
+                return new TodoDto(
+                        id, title, description, completed,
+                        createdAt, updatedAt, dueDate, personId,
+                        attachments != null ? attachments.size() : 0,
+                        attachments
+                );
+        }
+
 
 
 }

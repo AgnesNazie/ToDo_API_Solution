@@ -6,6 +6,7 @@ import io.jsonwebtoken.UnsupportedJwtException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -54,7 +55,7 @@ public class AuthServiceImpl implements AuthService {
         String jwt = jwtTokenUtil.generateToken(userDetails);
 
         Person person = personRepository.findByUserUsername(userDetails.getUsername())
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new AuthenticationServiceException("Invalid username or password"));
 
         return AuthResponseDto.builder()
                 .token(jwt)

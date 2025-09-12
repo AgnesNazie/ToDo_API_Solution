@@ -38,7 +38,7 @@ public class Todo {
 
     // Relationship with Person
     @ManyToOne
-    @JoinColumn(name = "person_id")
+    @JoinColumn(name = "person_id", nullable = false)
     private Person person;
 
     @OneToMany(mappedBy = "todo", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)

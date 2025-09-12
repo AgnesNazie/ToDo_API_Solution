@@ -1,5 +1,7 @@
 package se.lexicon.todo_app.service;
 
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import se.lexicon.todo_app.dto.AttachmentDto;
@@ -59,11 +61,11 @@ public class TodoServiceImpl implements TodoService {
                 todoDto.dueDate()
         );
 
-        if (todoDto.personId() != null) {
-            Person person = personRepository.findById(todoDto.personId())
-                    .orElseThrow(() -> new RuntimeException("Person not found"));
-            todo.setPerson(person);
-        }
+        // NEW: Automatically assign the logged-in person instead of using todoDto.personId
+        String username = SecurityContextHolder.getContext().getAuthentication().getName(); // NEW
+        Person person = personRepository.findByUserUsername(username) // NEW
+                .orElseThrow(() -> new RuntimeException("Person not found for user: " + username)); // NEW
+        todo.setPerson(person); // NEW
 
         // Add attachments if present
         if (todoDto.attachments() != null && !todoDto.attachments().isEmpty()) {
@@ -106,6 +108,7 @@ public class TodoServiceImpl implements TodoService {
         Todo existingTodo = todoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Todo not found"));
 
+        validateOwnership(existingTodo);
         existingTodo.setTitle(todoDto.title());
         existingTodo.setDescription(todoDto.description());
         existingTodo.setCompleted(todoDto.completed());
@@ -115,8 +118,6 @@ public class TodoServiceImpl implements TodoService {
             Person person = personRepository.findById(todoDto.personId())
                     .orElseThrow(() -> new RuntimeException("Person not found"));
             existingTodo.setPerson(person);
-        } else {
-            existingTodo.setPerson(null);
         }
 
         // Handle attachments
@@ -141,6 +142,10 @@ public class TodoServiceImpl implements TodoService {
 
     @Override
     public void delete(Long id) {
+        Todo existing = todoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Todo not found"));
+
+        validateOwnership(existing);
         todoRepository.deleteById(id);
     }
 
@@ -163,5 +168,14 @@ public class TodoServiceImpl implements TodoService {
         return todoRepository.findByDueDateBeforeAndCompletedFalse(LocalDateTime.now()).stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
+    }
+
+    private void validateOwnership(Todo todo) {
+        String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
+        String todoOwnerUsername = todo.getPerson().getUser().getUsername();
+
+        if (!currentUser.equals(todoOwnerUsername)) {
+            throw new AccessDeniedException("You are not the owner of this todo");
+        }
     }
 }
