@@ -23,7 +23,7 @@ public record PersonRegistrationDto(
     @NotBlank(message = "Password is required")
     @Size(min = 8, max = 100, message = "Password must be between 8 and 100 characters")
     //@Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!])(?=\\S+$).{8,}$",
-    //        message = "Password must contain at least one digit, lowercase, uppercase, and special character")
+    //       message = "Password must contain at least one digit, lowercase, uppercase, and special character")
     String password,
 
     @NotBlank(message = "Password confirmation is required")

@@ -75,7 +75,6 @@ public class PersonServiceImpl implements PersonService {
         // Save Person (cascade will save User)
         person = personRepository.save(person);
 
-        // emailService.sendMessage(new Email(person.getEmail(), "Welcome to Todo App", "Hello " + person.getName() + ",\n\nThank you for registering with us!"));
         //send confirmation email to created person
         emailService.sendMessage(new Email(person.getEmail(), "Welcome to Todo App", "Hello " + person.getName() + ",\n\nThank you for registering with us!"));
 

@@ -53,7 +53,6 @@ public class PersonController {
         return personService.findById(id);
     }
 
-    @RolesAllowed({"ADMIN", "MODERATOR"})
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED) // 201 Created
     public PersonDto createPerson(@RequestBody @NotNull(message = "Person cannot be null") @Valid PersonRegistrationDto personDto) {
